@@ -15,6 +15,16 @@ cd churchsuite-tools
 gcloud config set project [PROJECT_ID]  # use the project name you selected in point 1 above
 ```
 
+### Keeping image storage free
+
+Both Cloud Run and GAE store each build's image in [Google Cloud Artifact Registry](https://console.cloud.google.com/artifacts). The free tier covers 0.5GB of total storage per billing account. Old images accumulate, so you will be billed once they exceed this. To stay within the free tier:
+
+* Before every deployment, delete old images in [Google Cloud Artifact Registry](https://console.cloud.google.com/artifacts).
+  Alternatively, set up an Artifact Registry cleanup policy to delete old images automatically.
+* Prefer Cloud Run, whose images are much smaller. The `docexport` app's Cloud Run image is only 195MB.
+* On GAE, specify an older Python via `runtime` in `app.yaml` to make images smaller.
+  The `docexport` app's GAE image is 461MB with Python 3.12 and 508MB with Python 3.14.
+
 ### Option 1: Using Cloud Run (recommended)
 
 Now deploy it with cloud run:
@@ -23,7 +33,7 @@ Now deploy it with cloud run:
 gcloud run deploy [APP_NAME] --source . --region [REGION] --allow-unauthenticated
 ```
 
-Replace `[APP_NAME]` with a name for your service and `[REGION]` with a Google Cloud region near you, e.g. `australia-southeast1`. Cloud Run will build a container image and prompt you to enable any APIs it needs the first time you deploy.
+Replace `[APP_NAME]` with a name for your service (e.g. `docexport`) and `[REGION]` with a Google Cloud region near you, e.g. `australia-southeast1`. Cloud Run will build a container image and prompt you to enable any APIs it needs the first time you deploy.
 
 By default, Cloud Run starts the app with `gunicorn -b :8080 main:app`. The repository's [`main.py`](main.py) simply runs `docexport_app`. To deploy a different app, create a `Procfile` containing one line: `web: gunicorn -b :$PORT contacts_app:app`
 
@@ -40,12 +50,7 @@ Instead of Cloud Run, you can deploy on Google App Engine (GAE). This is an olde
 
 First perform the "Google Cloud Setup" instructions above. Then modify `app.yaml` in this repository to suit yourself. (Cloud Run above doesn't require this file.)
 
-**Note:** Before you deploy, delete artifacts from any previous builds. This is because you are billed for any deployed image bigger than 500MB. Note that Google Cloud Run (above) doesn't have this limitation. Check its size in [Google Cloud Artifact Registry](https://console.cloud.google.com/artifacts). To make images small:
-
-* Specify older Pythons in `app.yaml`. The `docexport` app is 461MB with Python 3.12 and 508MB with Python 3.14.
-* Before every deployment, delete the old image in [Google Cloud Artifact Registry](https://console.cloud.google.com/artifacts).
-
-Then deploy:
+Before you deploy, see "Keeping image storage free" above. Then deploy:
 
 ```sh
 gcloud app deploy
