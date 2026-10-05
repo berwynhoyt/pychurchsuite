@@ -1,5 +1,5 @@
 runtime: python312
-entrypoint: gunicorn -b :$PORT docexport_app:app
+entrypoint: gunicorn -b :$PORT main:app
 
 # Keep the app running in the free tier of Google App Engine
 instance_class: F1

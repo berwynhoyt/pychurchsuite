@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # Example minimal web app to display all the people in your database
+# Copy this whole directory to start your own app. See README-python-hosted.md to deploy it.
 
 import os
 import secrets
 from flask import Flask
-import churchsuite
-from churchsuite import ChurchsuiteApp
+from churchsuite.web import ChurchsuiteApp
 
 app = Flask(__name__)
 app.config['SESSION_COOKIE_SECURE'] = True  # require secure https (set to False only for localhost debugging below)
-app.config['SECRET_KEY'] = secrets.token_hex()  # see config_defaults.py for an explanation
+app.config['SECRET_KEY'] = secrets.token_hex()  # see churchsuite/config_defaults.py for an explanation
 
 cs = ChurchsuiteApp(app)
 

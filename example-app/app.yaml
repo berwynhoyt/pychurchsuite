@@ -1,0 +1,8 @@
+runtime: python312
+entrypoint: gunicorn -b :$PORT main:app
+
+# Keep the app running in the free tier of Google App Engine
+instance_class: F1
+automatic_scaling:
+  max_instances: 1  # Caps the total number of instances to guarantee this uses free tier only
+  min_instances: 0  # Shut down when not in use

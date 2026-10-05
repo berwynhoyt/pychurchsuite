@@ -22,7 +22,7 @@ from docx.shared import Mm, Pt
 from docx.enum.text import WD_TAB_ALIGNMENT
 from docx.oxml.shared import qn
 
-__version__ = '1.2.1'  # NOTE: remember to update CHANGELOG.docexport.md
+__version__ = churchsuite.__version__
 
 # Regex of pattern used to identify start of red-highlighted text in service plans
 everyone_pattern = re.compile(r'(.* |^)((all|everyone|together|^people):)(.*)', re.IGNORECASE + re.DOTALL)
@@ -273,11 +273,12 @@ def list_serviceplans(cs, max_age_days=400):
         print(plan_title(plan))
 
 
-# Set defaults that may be used instead of command-line parameters when this module is imported (e.g. by docexport_app.py)
-# Note: type of default must match desired type as docexport_app.py uses that fact to cast incoming query parameters
+# Set defaults that may be used instead of command-line parameters when this module is imported (e.g. by docexport_web.py)
+# Note: type of default must match desired type as docexport_web.py uses that fact to cast incoming query parameters
 args = SimpleNamespace(language='en_AU', pagesize='A4', fontsize=14, starts_from='', starts_before='')
 
-if __name__ == "__main__":
+def main():
+    global args
     parser = argparse.ArgumentParser()
     parser.add_argument('--starts-from', action='store', default='', help="Specify start date (YYYY-MM-DD) from which to download upcoming service plans (default today).")
     parser.add_argument('--starts-before', action='store', default='', help="Specify end date (YYYY-MM-DD) to download service plans up to.")
@@ -291,7 +292,7 @@ if __name__ == "__main__":
     parser.add_argument('-l', '--list', action='store', nargs='?', type=int, default=None, const=400, help="List service titles, sorted by date, up to specified days old (default 400)")
     args = parser.parse_args()
     if len(sys.argv) < 2:
-        print(f"{sys.argv[0]} exports ChurchSuite service plans to a docx file. For help, run: {sys.argv[0]} -h")
+        print(f"{parser.prog} exports ChurchSuite service plans to a docx file. For help, run: {parser.prog} -h")
 
     # Set logging level based on -v flag
     log_level = logging.WARNING - 10*args.verbose
@@ -301,8 +302,10 @@ if __name__ == "__main__":
         print(__version__)
         sys.exit()
 
-    import config
-    cs = churchsuite.Churchsuite(auth=(config.USER_CLIENT_ID, config.USER_CLIENT_SECRET), raw=args.raw, scope=['planning.read'])
+    try:
+        cs = churchsuite.Churchsuite(auth=churchsuite.user_auth(), raw=args.raw, scope=['planning.read'])
+    except churchsuite.ChurchError as e:
+        sys.exit(f"Error: {e}")
 
     if args.list is not None:
         list_serviceplans(cs, max_age_days=args.list)
@@ -317,3 +320,7 @@ if __name__ == "__main__":
             plan2txt(cs, plan.id, title)
         else:
             plan2docx(cs, plan.id, title)
+
+
+if __name__ == "__main__":
+    main()

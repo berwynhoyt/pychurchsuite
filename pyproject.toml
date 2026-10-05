@@ -1,0 +1,52 @@
+[build-system]
+requires = ["hatchling >= 1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pychurchsuite"
+dynamic = ["version"]
+description = "Unofficial Python library and tools for the ChurchSuite API v2, including the DocExport church service plan exporter"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+authors = [{ name = "Berwyn Hoyt" }]
+keywords = ["churchsuite", "church", "api", "oauth", "docx", "service plans"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Environment :: Web Environment",
+    "Framework :: Flask",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Religion",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Religion",
+]
+dependencies = [
+    "requests >= 2.32.3",
+    "requests-oauthlib >= 2.0.0",
+    "python-docx >= 1.2.0",
+    "pathvalidate >= 3.3.1",
+    "Flask >= 3.1.3",
+]
+
+[project.scripts]
+churchsuite = "churchsuite.__main__:main"
+docexport = "churchsuite.tools.docexport:main"
+docexport-web = "churchsuite.tools.docexport_web:main"
+attenders = "churchsuite.tools.attenders:main"
+
+[project.urls]
+Homepage = "https://github.com/berwynhoyt/pychurchsuite"
+Documentation = "https://github.com/berwynhoyt/pychurchsuite/blob/main/README.md"
+Changelog = "https://github.com/berwynhoyt/pychurchsuite/blob/main/CHANGELOG.md"
+
+[tool.hatch.version]
+path = "churchsuite/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["churchsuite"]
+
+[tool.hatch.build.targets.sdist]
+include = ["churchsuite", "examples/*.py", "example-app/*","README*.md", "CHANGELOG.md", "LICENSE"]
