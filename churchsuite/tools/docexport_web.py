@@ -13,15 +13,16 @@ import jinja2
 import flask
 from flask import Flask, request, url_for, redirect, render_template_string
 
-from churchsuite import ChurchsuiteApp
-import docexport
+from churchsuite.web import ChurchsuiteApp
+from churchsuite.tools import docexport
 
 __version__ = docexport.__version__
 
 app = Flask(__name__)
 app.config['SESSION_COOKIE_SECURE'] = True  # require secure https (set to False only for localhost debugging below)
-app.config.from_pyfile('config_defaults.py', silent=True)  # update from version-tracked config defaults
-app.config.from_pyfile('config.py', silent=True)  # update from non-version-tracked config file
+app.config.from_object('churchsuite.config_defaults')  # update from version-tracked config defaults
+# Flask finds relative config files in the package directory, so name the current directory explicitly
+app.config.from_pyfile(os.path.join(os.getcwd(), 'config.py'), silent=True)  # update from non-version-tracked config file
 
 cs = ChurchsuiteApp(app, scope=['planning.read'])
 
@@ -124,7 +125,7 @@ templates = SimpleNamespace(
     home = """
         {% include 'header' %}
         <p style="color: #3c4791;"><b>Church service plan beautifier for ChurchSuite that exports service plans as docx files.<br/>Version {{ __version__ }}.
-            Examples, documentation, and source code <a href="https://github.com/berwynhoyt/churchsuite">here</a>.</b></p>
+            Examples, documentation, and source code <a href="https://github.com/berwynhoyt/pychurchsuite">here</a>.</b></p>
 
         <form action="/docx/plans" >
             <input type="hidden" name="client_id" value="">
@@ -188,11 +189,16 @@ string_loader = jinja2.DictLoader(vars(templates))
 app.jinja_env.loader = jinja2.ChoiceLoader([string_loader, app.jinja_env.loader])
 
 
-if __name__ == "__main__":
+def main():
+    """ Run the app on a localhost server for testing """
     import logging
     logging.basicConfig(level=logging.DEBUG, format=f'%(levelname)s: %(message)s')
 
     app.config['SESSION_COOKIE_SECURE'] = False # https not required for localhost debugging
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' # allow debug using insecure http://localhost
     port = int(os.environ.get("PORT", 8080))
-    app.run(debug=True, host="0.0.0.0", port=port)
+    app.run(debug=True, host="127.0.0.1", port=port)  # localhost only, since the debugger can run any code
+
+
+if __name__ == "__main__":
+    main()

@@ -3,11 +3,11 @@
 In addition to the Python library, this site contains user tools for ChurchSuite:
 
 1. [DocExport Tool](README-docexport.md) – create beautiful church service plans as a Word document.
-2. [PyChurchSuite (below)](README-python.md) – Python library for simple ChurchSuite scripting (used to create DocExport Tool).
+2. [PyChurchSuite (below)](#pychurchsuite-python-library) – Python library for simple ChurchSuite scripting (used to create DocExport Tool).
 
 ## PyChurchSuite Python Library
 
-The `churchsuite.py` Python module makes it easy to create Python apps and scripts for the ChurchSuite API v2. Not only does it provide a class that supports queries to ChurchSuite, it also automates Churchsuite login, and capture of the user's `client_id`. This is the same module used for the [DocExport app](README-docexport.md). It requires Python >= 3.12 for backslashes in f-strings.
+The `churchsuite` Python package makes it easy to create Python apps and scripts for the ChurchSuite API v2. Not only does it provide a class that supports queries to ChurchSuite, it also automates Churchsuite login, and capture of the user's `client_id`. This is the same module used for the [DocExport app](README-docexport.md). It requires Python >= 3.12 for backslashes in f-strings.
 
 ## Quick Examples
 
@@ -15,9 +15,8 @@ To print all the people in your database:
 
 ```python
 import churchsuite
-import config
 
-cs = churchsuite.Churchsuite(auth=[config.USER_CLIENT_ID, config.USER_CLIENT_SECRET])
+cs = churchsuite.Churchsuite(auth=churchsuite.user_auth())
 people = cs.get('addressbook/contacts', per_page=100, status='active')
 for p in people:
 	print(f"{p.first_name} {p.last_name}: {p.email}")
@@ -29,12 +28,11 @@ To make a web app that does the same in a browser:
 import os
 import secrets
 from flask import Flask
-import churchsuite
-from churchsuite import ChurchsuiteApp
+from churchsuite.web import ChurchsuiteApp
 
 app = Flask(__name__)
 app.config['SESSION_COOKIE_SECURE'] = True  # require secure https (set to False only for localhost debugging below)
-app.config['SECRET_KEY'] = secrets.token_hex()  # see config_defaults.py for an explanation
+app.config['SECRET_KEY'] = secrets.token_hex()  # see churchsuite/config_defaults.py for an explanation
 
 cs = ChurchsuiteApp(app)
 
@@ -55,33 +53,60 @@ if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=port)
 ```
 
-You can test this app on your local computer by simply running `python app.py` and browsing to `localhost:8080`. However, first you will have to set up a new app on ChurchSuite to point the "Redirect URI" to `localhost:8080/login/callback`.
+This app is in [`example-app/main.py`](example-app/main.py), ready to copy and deploy. You can test it on your local computer by simply running `python main.py` and browsing to `localhost:8080`. However, first you will have to set up a new app on ChurchSuite to point the "Redirect URI" to `localhost:8080/login/callback`.
 
-See [`docexport_app.py`](docexport_app.py) for a web app that is more realistic, but still short.
+See [`docexport_web.py`](churchsuite/tools/docexport_web.py) for a web app that is more realistic, but still short.
 
 ## Installation
 
-Install [Python](https://www.python.org/downloads/) >= 3.12, then:
+Install [Python](https://www.python.org/downloads/) >= 3.12, then install this package into your project's virtual environment:
 
 ```bash
 # Set up a Python virtual environment
-[ ! -d ".venv" ] && python -m venv .venv
-export VIRTUAL_ENV="$PWD/.venv"
+python -m venv .venv
+source .venv/bin/activate  # on Windows: .venv\Scripts\activate
 
-# Clone this repository and download Python prerequisites
-git clone https://github.com/berwynhoyt/churchsuite.git
-cd churchsuite
-pip install -r requirements-base.txt
+pip install pychurchsuite
 ```
 
-Now you're ready to create your own Python web app.
+Now you're ready to create your own Python script or web app.
 
-If you want to run a **local Python** script to authenticate without a web app, you also need to create a file called `config.py` [your ChurchSuite API keys](https://developer.churchsuite.com/auth):
+A **local Python** script can authenticate without a web app using `churchsuite.user_auth()`. It needs [your ChurchSuite API keys](https://developer.churchsuite.com/auth). Set environment variables `CHURCHSUITE_CLIENT_ID` and `CHURCHSUITE_CLIENT_SECRET`. Or put them in `config.py` in the current directory:
 
 ```python
 USER_CLIENT_ID = "your-client-id"
 USER_CLIENT_SECRET = "your-client-secret"
 ```
+
+To check that your keys work, run `churchsuite` to print an access token. To test web login on `localhost:8080`, run `python -m churchsuite.web`.
+
+## Developing this package
+
+To change the package itself, clone it and install it into a virtual environment in editable mode. Then your edits take effect immediately. With [uv](https://docs.astral.sh/uv/):
+
+```bash
+git clone https://github.com/berwynhoyt/pychurchsuite.git
+cd pychurchsuite
+uv sync                      # create .venv/ and install this package and its dependencies
+source .venv/bin/activate
+```
+
+Without uv, replace `uv sync` with `python -m venv .venv`, activate it as above, then run: `pip install -e .`
+
+Now the tool commands should work, as well as running a tool file directly with `python`:
+
+```bash
+docexport --version                       # run a command
+python churchsuite/tools/docexport.py -h  # run a tool file directly
+python -m churchsuite.web                 # run the login test server
+docexport-web                             # run the DocExport web app on localhost:8080
+```
+
+Activate `.venv/` in each new terminal (though many code editors do this automatically). If the dependencies in `pyproject.toml` change, run `uv sync` again.
+
+Without this setup, `python churchsuite/tools/docexport.py` fails with `No module named 'churchsuite'`. That is because Python searches `sys.path` for imports, not the file's parent directory.
+
+To release a new version to PyPI, see [RELEASING.md](RELEASING.md).
 
 ## OAuth Authorization
 

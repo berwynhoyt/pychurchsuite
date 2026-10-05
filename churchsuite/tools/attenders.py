@@ -29,15 +29,15 @@ modules = dict(
 module = modules['addressbook']  # Set later by --module
 
 # Exceptions
-class PeopleError(Exception): pass
-class NoTag(PeopleError): pass
-class NoFlow(PeopleError): pass
-class NoFlowTag(PeopleError): pass
-class NoStage(PeopleError): pass
-class FlowNotAcceptingPeople(PeopleError): pass
-class InvalidStatus(PeopleError): pass
+class AttendersError(Exception): pass
+class NoTag(AttendersError): pass
+class NoFlow(AttendersError): pass
+class NoFlowTag(AttendersError): pass
+class NoStage(AttendersError): pass
+class FlowNotAcceptingPeople(AttendersError): pass
+class InvalidStatus(AttendersError): pass
 
-__version__ = '1.0.0'
+__version__ = churchsuite.__version__
 
 def attendance_records(cs, weeks=31, days=['sunday']):
     """ Return dict of attendance records (by record_id) that fall on specified days in the previous number of weeks specified """
@@ -182,7 +182,7 @@ def filter_by_flow_tag(cs, people, flow_tag_names=list(), message=''):
     has_inclusions = any(not name.startswith('-') for name in flow_tag_names)
     return [p for p in people if (not has_inclusions or p.id in inclusions) and p.id not in exclusions]
 
-def main(args):
+def run(args):
     if args.version:
         print(__version__)
         sys.exit()
@@ -191,8 +191,7 @@ def main(args):
     log_level = logging.WARNING - 10*args.verbose
     logging.basicConfig(level=log_level, format=f'%(levelname)s: %(message)s')
 
-    import config
-    cs = churchsuite.Churchsuite(auth=(config.USER_CLIENT_ID, config.USER_CLIENT_SECRET), scope=scope)
+    cs = churchsuite.Churchsuite(auth=churchsuite.user_auth(), scope=scope)
 
     # Get all people and filter by specified attendance, tags and flows
     people = cs.get(f'{args.module}/{module.people}', status='active', q=args.fuzzy_filter if args.fuzzy_filter else None)  # fetch everyone
@@ -274,7 +273,9 @@ def main(args):
                 print(f"  excluding {len(unadded)} already in the flow:", ', '.join(f"{p.first_name} {p.last_name}" for p in unadded))
 
 
-if __name__ == "__main__":
+def main():
+    global args, scope, module
+
     def parse_attendance(freq):
         """ Parse attendance frequency argument of style: [<]4/8. """
         try:
@@ -291,12 +292,15 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         usage="%(prog)s [--help] [options]",
+        formatter_class=argparse.RawDescriptionHelpFormatter,  # keep the description's line breaks
         description=
-            "Select people who are regular or irregular and/or people who are in a tag or flow. Optionally add them to a tag/flow.\n"
+            "Select people who are regular or irregular and/or people who are in a tag or flow.\n"
+            "Optionally add them to a tag/flow.\n"
+            "\n"
             "Examples:\n"
-            "  people.py --attendance   4/8  --in=-Members,-Followup          --add-to-flow Followup\n"
-            '  people.py --attendance "<2/8"  --in=Members,-Followup,-ShutIn  --add-to-flow Followup\n'
-            "  people.py --in TrainingExpired --add-to-flow FollowupTraining",
+            "  %(prog)s --attendance   4/8  --in=-Members,-Followup          --add-to-flow Followup\n"
+            '  %(prog)s --attendance "<2/8"  --in=Members,-Followup,-ShutIn  --add-to-flow Followup\n'
+            "  %(prog)s --in TrainingExpired --add-to-flow FollowupTraining",
     )
 
     # Select a different module than addressbook
@@ -342,6 +346,10 @@ if __name__ == "__main__":
         parser.error("--attendance only works with --module=addressbook")
 
     try:
-        main(args)
-    except PeopleError as e:
+        run(args)
+    except (AttendersError, churchsuite.ChurchError) as e:
         sys.exit(f"Error: {e}")
+
+
+if __name__ == "__main__":
+    main()

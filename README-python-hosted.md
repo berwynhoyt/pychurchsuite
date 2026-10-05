@@ -5,13 +5,13 @@ You don't have to host your own ChurchSuite web app. You can run it for free on 
 ### Google Cloud Setup
 
 1. Follow instructions to [Create a Google Cloud project](https://docs.cloud.google.com/appengine/docs/standard/python3/building-app/creating-gcp-project). Call the project `<yourchurch>-<appname>` (called **[PROJECT_ID]** below). This google cloud interface is complicated, but I'm afraid I can't help you with it. It will make you create a Google billing account and will take your credit card but it won't actually bill you anything unless your app is used several hours a day. Typical usage of DocExport, for example, fits well within the free tier.
-2. Note: first test your app on your localhost, e.g. run `python docexport_app.py` and then browse to `localhost:8080`.
-3. Create a [`config.py`](config.py) file suitable for your app if necessary to override items in `config_defaults.py`.
+2. Note: first test your app on your localhost, e.g. run `docexport-web` and then browse to `localhost:8080`. To set up `docexport-web`, see [Developing this package](README.md#developing-this-package).
+3. Create a [`config.py`](config.py) file suitable for your app if necessary to override items in [`churchsuite/config_defaults.py`](churchsuite/config_defaults.py).
 4. Deploy the app to your Google Cloud project by browsing to [Google Cloud Shell](https://shell.cloud.google.com/) and then type your equivalent of:
 
 ```sh
-git clone https://github.com/berwynhoyt/churchsuite-tools.git
-cd churchsuite-tools
+git clone https://github.com/berwynhoyt/pychurchsuite.git
+cd pychurchsuite
 gcloud config set project [PROJECT_ID]  # use the project name you selected in point 1 above
 ```
 
@@ -35,7 +35,9 @@ gcloud run deploy [APP_NAME] --source . --region [REGION] --allow-unauthenticate
 
 Replace `[APP_NAME]` with a name for your service (e.g. `docexport`) and `[REGION]` with a Google Cloud region near you, e.g. `australia-southeast1`. Cloud Run will build a container image and prompt you to enable any APIs it needs the first time you deploy.
 
-By default, Cloud Run starts the app with `gunicorn -b :8080 main:app`. The repository's [`main.py`](main.py) simply runs `docexport_app`. To deploy a different app, create a `Procfile` containing one line: `web: gunicorn -b :$PORT contacts_app:app`
+By default, Cloud Run starts the app with `gunicorn -b :8080 main:app`. The repository's [`main.py`](main.py) simply runs `docexport_web`. To deploy a different app, create a `Procfile` containing one line, e.g.: `web: gunicorn -b :$PORT myapp:app`
+
+To start your own app, copy the [`example-app`](example-app) directory. It contains a minimal `main.py`, a `requirements.txt` that installs pychurchsuite from PyPI, and an `app.yaml` for GAE. Deploy it from inside that directory using the same commands, or from the repository root with `--source example-app`.
 
 Now the app will be running on the URL that the command above supplies, typically: `https://[APP_NAME]-[HASH]-[REGION].a.run.app/`.
 
@@ -100,7 +102,7 @@ If you want to test use of the Google Secrets Manager locally, you need to set u
    ```sh
    export GOOGLE_CLOUD_PROJECT=[PROJECT_ID]
    export GOOGLE_APPLICATION_CREDENTIALS=[path_to_your_json_file]
-   python docexport_app.py
+   docexport-web
    ```
 
 Now you can use `churchsuite.GoogleSecretManager()` to fetch secrets from Google Secret Manager on your local computer (you may need to `pip install google-cloud-secret-manager`).

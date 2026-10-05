@@ -1,0 +1,6 @@
+# Python requirements for your own app built on pychurchsuite
+
+pychurchsuite >= 1.3.0
+
+# Required only when deployed on Google Cloud Run or Google App Engine
+gunicorn >= 25.3.0

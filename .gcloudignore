@@ -3,4 +3,10 @@ __pycache__
 secret.py
 *.docx
 json.txt
-contacts.py
+examples/
+example-app/
+*.pdf
+dist/
+.github/
+release.py
+RELEASING.md
