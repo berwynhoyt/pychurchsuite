@@ -3,7 +3,7 @@
 In addition to the Python library, this site contains user tools for ChurchSuite:
 
 1. [DocExport Tool](README-docexport.md) – create beautiful church service plans as a Word document.
-2. [PyChurchsuite (below)](README-python.md) – Python library for simple ChurchSuite scripting (used to create DocExport Tool).
+2. [PyChurchSuite (below)](README-python.md) – Python library for simple ChurchSuite scripting (used to create DocExport Tool).
 
 ## PyChurchSuite Python Library
 
