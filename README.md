@@ -1,39 +1,95 @@
-# ChurchSuite Tools
+# PyChurchSuite and Tools
 
-Go to the [ToolShare Wiki](https://github.com/berwynhoyt/churchsuite-tools/wiki/ChurchSuite-ToolShare-%E2%80%90-Wiki) if you are looking for the wiki that lists third-party tools for ChurchSuite.
+In addition to the Python library, this site contains user tools for ChurchSuite:
 
-However, if you're looking for **ChurchSuite Tools** by Berwyn Hoyt, they are here:
+1. [DocExport Tool](README-docexport.md) – create beautiful church service plans as a Word document.
+2. [PyChurchsuite (below)](README-python.md) – Python library for simple ChurchSuite scripting (used to create DocExport Tool).
 
-1. [DocExport Tool (below)](#docexport-tool) – create beautiful church service plans as a Word document.
-2. [Churchsuite Python scripting](README-python.md) – my Python library for simple ChurchSuite scripting (used to create DocExport Tool).
+## PyChurchSuite Python Library
 
-## DocExport Tool
+The `churchsuite.py` Python module makes it easy to create Python apps and scripts for the ChurchSuite API v2. Not only does it provide a class that supports queries to ChurchSuite, it also automates Churchsuite login, and capture of the user's `client_id`. This is the same module used for the [DocExport app](README-docexport.md). It requires Python >= 3.12 for backslashes in f-strings.
 
-This is a tool that exports church service plans as beautiful, clean, `docx` files. Compare this [docx sample](https://github.com/berwynhoyt/churchsuite/raw/refs/heads/master/example/2026-04-05_9am_Morning_Service_(draft).docx) with ChurchSuite's [original pdf](https://github.com/berwynhoyt/churchsuite/raw/refs/heads/master/example/2026-04-05_9am_Morning_Service.pdf) of the same service.
+## Quick Examples
 
-You can [try it yourself here](https://serviceplans.ts.r.appspot.com/) if your church uses ChurchSuite.
+To print all the people in your database:
 
-At that same link you can even create a hyperlink directly to your own church's service plans, and bookmark it or add it as a menu item in My ChurchSuite (to set it up go to `ChurchSuite->Menu->Settings->Profile->My ChurchSuite->Add external link`). You can only set up such links in My Churchsuite, as ChurchSuite itself does not yet let you add custom links.
+```python
+import churchsuite
+import config
 
-### Features
-
-The exported docx service plans features:
-
-* Service leaders can more easily highlight or add their own notes than they could with the pdf.
-* A clearer format for service leaders to find their place on the page.
-* It automatically highlights in red any 'responsive readings' that comes after "all:", "everyone:", "together:", or "people:"
-* It stops red text when it gets to a double-new-line or when it gets to a "Leader:" line.
-* It emboldens "Leader:", "Minister, or "Reader:"
-* "Song", "Hymn" and "Psalm" headings are displayed in green along with the song title.
-* Level-2 section headings are omitted if the heading is not followed by text contents, omitting empty sections.
-
-## Automating DocExport
-
-If you want to automate DocExport, for example exporting these files daily, you can run it as a Python command-line program:
-
-```sh
-$ ./docexport.py --fontsize 16
-Creating 2026-05-03 9am Morning Service.docx
-Creating 2026-05-03 5pm Service.docx
+cs = churchsuite.Churchsuite(auth=[config.USER_CLIENT_ID, config.USER_CLIENT_SECRET])
+people = cs.get('addressbook/contacts', per_page=100, status='active')
+for p in people:
+	print(f"{p.first_name} {p.last_name}: {p.email}")
 ```
+
+To make a web app that does the same in a browser:
+
+```python
+import os
+import secrets
+from flask import Flask
+import churchsuite
+from churchsuite import ChurchsuiteApp
+
+app = Flask(__name__)
+app.config['SESSION_COOKIE_SECURE'] = True  # require secure https (set to False only for localhost debugging below)
+app.config['SECRET_KEY'] = secrets.token_hex()  # see config_defaults.py for an explanation
+
+cs = ChurchsuiteApp(app)
+
+@app.route('/')
+def home():
+    return """Click <a href="/people">here</a> to see everyone."""
+
+@app.route('/people')
+@cs.login_required
+def people():
+    people = cs.get('addressbook/contacts', per_page=100, status='active')
+    return '<br>'.join(f"{p.first_name} {p.last_name}: {p.email}" for p in people)
+
+if __name__ == "__main__":
+    app.config['SESSION_COOKIE_SECURE'] = False # https not required for localhost debugging
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' # allow debug using insecure http://localhost
+    port = int(os.environ.get("PORT", 8080))
+    app.run(debug=True, host="0.0.0.0", port=port)
+```
+
+You can test this app on your local computer by simply running `python app.py` and browsing to `localhost:8080`. However, first you will have to set up a new app on ChurchSuite to point the "Redirect URI" to `localhost:8080/login/callback`.
+
+See [`docexport_app.py`](docexport_app.py) for a web app that is more realistic, but still short.
+
+## Installation
+
+Install [Python](https://www.python.org/downloads/) >= 3.12, then:
+
+```bash
+# Set up a Python virtual environment
+[ ! -d ".venv" ] && python -m venv .venv
+export VIRTUAL_ENV="$PWD/.venv"
+
+# Clone this repository and download Python prerequisites
+git clone https://github.com/berwynhoyt/churchsuite.git
+cd churchsuite
+pip install -r requirements-base.txt
+```
+
+Now you're ready to create your own Python web app.
+
+If you want to run a **local Python** script to authenticate without a web app, you also need to create a file called `config.py` [your ChurchSuite API keys](https://developer.churchsuite.com/auth):
+
+```python
+USER_CLIENT_ID = "your-client-id"
+USER_CLIENT_SECRET = "your-client-secret"
+```
+
+## OAuth Authorization
+
+In the context of a Flask web app, the Python module also implements all the pages needed to for the app to login to ChurchSuite using OAuth. This can be done by simply applying the decorator `@cs.login_required` to any route handler function (after the @app.route decorator), as shown in the app example above. Any route that requires access to ChurchSuite data may have this decorator and the user will first be required to login if necessary. The login will fetch an `access_token` from ChurchSuite and store it in the web session which the ChurchsuiteApp instance will subsequently use for every access to ChurchSuite data.
+
+The Python module also automates capture of `client_id` from the user. Ordinarily the user would have to supply a `client_id` so that ChurchSuite knows which customer to login for church database access. The `client_id` can then be preserved in a browser cookie for future use. Alternatively, a `client_id` may be supplied in a URL parameter. All this is automated by the Python module. The user is asked for their `client_id` and given instructions on how to obtain it. Their `client_id` is preserved in a browser cookie for 400 days (the maximum allowed), and the user is also given a URL that includes the `client_id` to use in future, if they prefer. This client-specific URL may be given ChurchSuite users by the church administrator so that the user never has to worry about a `client_id`.
+
+## Running your own ChurchSuite app in the cloud using Google Services
+
+[Instructions here](README-python-hosted.md) show how to let Google Cloud host your ChurchSuite web app for free (you don't need your own physical server). It can either run your ChurchSuite app as a service or you can make it run your Python script periodically to automate periodic ChurchSuite tasks.
 
