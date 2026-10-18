@@ -2,12 +2,12 @@
 
 In addition to the Python library, this site contains user tools for ChurchSuite:
 
-1. [DocExport Tool](README-docexport.md) – create beautiful church service plans as a Word document.
+1. [DocExport Tool](https://github.com/berwynhoyt/pychurchsuite/blob/main/README-docexport.md) – create beautiful church service plans as a Word document.
 2. [PyChurchSuite (below)](#pychurchsuite-python-library) – Python library for simple ChurchSuite scripting (used to create DocExport Tool).
 
 ## PyChurchSuite Python Library
 
-The `churchsuite` Python package makes it easy to create Python apps and scripts for the ChurchSuite API v2. Not only does it provide a class that supports queries to ChurchSuite, it also automates Churchsuite login, and capture of the user's `client_id`. This is the same module used for the [DocExport app](README-docexport.md). It requires Python >= 3.12 for backslashes in f-strings.
+The `churchsuite` Python package makes it easy to create Python apps and scripts for the ChurchSuite API v2. Not only does it provide a class that supports queries to ChurchSuite, it also automates Churchsuite login, and capture of the user's `client_id`. This is the same module used for the [DocExport app](https://github.com/berwynhoyt/pychurchsuite/blob/main/README-docexport.md). It requires Python >= 3.12 for backslashes in f-strings.
 
 ## Quick Examples
 
@@ -53,9 +53,9 @@ if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=port)
 ```
 
-This app is in [`example-app/main.py`](example-app/main.py), ready to copy and deploy. You can test it on your local computer by simply running `python main.py` and browsing to `localhost:8080`. However, first you will have to set up a new app on ChurchSuite to point the "Redirect URI" to `localhost:8080/login/callback`.
+This app is in [`example-app/main.py`](https://github.com/berwynhoyt/pychurchsuite/blob/main/example-app/main.py), ready to copy and deploy. You can test it on your local computer by simply running `python main.py` and browsing to `localhost:8080`. However, first you will have to set up a new app on ChurchSuite to point the "Redirect URI" to `localhost:8080/login/callback`.
 
-See [`docexport_web.py`](churchsuite/tools/docexport_web.py) for a web app that is more realistic, but still short.
+See [`docexport_web.py`](https://github.com/berwynhoyt/pychurchsuite/blob/main/churchsuite/tools/docexport_web.py) for a web app that is more realistic, but still short.
 
 ## Installation
 
@@ -106,7 +106,7 @@ Activate `.venv/` in each new terminal (though many code editors do this automat
 
 Without this setup, `python churchsuite/tools/docexport.py` fails with `No module named 'churchsuite'`. That is because Python searches `sys.path` for imports, not the file's parent directory.
 
-To release a new version to PyPI, see [RELEASING.md](RELEASING.md).
+To release a new version to PyPI, see [RELEASING.md](https://github.com/berwynhoyt/pychurchsuite/blob/main/RELEASING.md).
 
 ## OAuth Authorization
 
@@ -116,5 +116,5 @@ The Python module also automates capture of `client_id` from the user. Ordinaril
 
 ## Running your own ChurchSuite app in the cloud using Google Services
 
-[Instructions here](README-python-hosted.md) show how to let Google Cloud host your ChurchSuite web app for free (you don't need your own physical server). It can either run your ChurchSuite app as a service or you can make it run your Python script periodically to automate periodic ChurchSuite tasks.
+[Instructions here](https://github.com/berwynhoyt/pychurchsuite/blob/main/README-python-hosted.md) show how to let Google Cloud host your ChurchSuite web app for free (you don't need your own physical server). It can either run your ChurchSuite app as a service or you can make it run your Python script periodically to automate periodic ChurchSuite tasks.
 
