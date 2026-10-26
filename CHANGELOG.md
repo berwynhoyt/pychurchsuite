@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.3.1:
+
+Attenders:
+
+- Web apps and scripts can now import attenders and run it directly, without running the command.
+  For example: `attenders.run(attenders.parse_args(['--attendance', '4/8']), out=stream)`.
+
 ## v1.3.0:
 
 All the tools now install together as one Python package, with one shared version number.

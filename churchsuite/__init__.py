@@ -12,7 +12,7 @@ from types import SimpleNamespace
 import requests
 
 
-__version__ = '1.3.0'  # Version of the whole package, including tools. NOTE: remember to update CHANGELOG.md
+__version__ = '1.3.1'  # Version of the whole package, including tools. NOTE: remember to update CHANGELOG.md
 
 class ChurchError(Exception): pass
 
